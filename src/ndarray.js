@@ -318,7 +318,7 @@ NdArray.prototype.reshape = function (shape) {
 * Permute the dimensions of the array.
 *
 * @param {...number} [axes]
-* @returns {NfdArray}
+* @returns {NdArray}
 */
 NdArray.prototype.transpose = function (axes) {
   if (arguments.length === 0) {
@@ -469,6 +469,138 @@ NdArray.prototype.divide = function (x, copy) {
   x = createArray(x, this.dtype);
   ops.diveq(arr.selection, x.selection);
 
+  return arr;
+};
+
+/**
+ * Bitwise and (&) `x` to the array, element-wise.
+ *
+ * @param {(NdArray|Array|number)} x
+ * @param {boolean} [copy=true]
+ * @returns {NdArray}
+ */
+NdArray.prototype.bitand = function (x, copy) {
+  if (arguments.length === 1) {
+    copy = true;
+  }
+  var arr = copy ? this.clone() : this;
+
+  if (_.isNumber(x)) {
+    ops.bandseq(arr.selection, x);
+    return arr;
+  }
+  x = createArray(x, this.dtype);
+  ops.bandeq(arr.selection, x.selection);
+  return arr;
+};
+
+/**
+ * Bitwise or (|) `x` to the array, element-wise.
+ *
+ * @param {(NdArray|Array|number)} x
+ * @param {boolean} [copy=true]
+ * @returns {NdArray}
+ */
+NdArray.prototype.bitor = function (x, copy) {
+  if (arguments.length === 1) {
+    copy = true;
+  }
+  var arr = copy ? this.clone() : this;
+
+  if (_.isNumber(x)) {
+    ops.borseq(arr.selection, x);
+    return arr;
+  }
+  x = createArray(x, this.dtype);
+  ops.boreq(arr.selection, x.selection);
+  return arr;
+};
+
+/**
+ * Bitwise xor (|) `x` to the array, element-wise.
+ *
+ * @param {(NdArray|Array|number)} x
+ * @param {boolean} [copy=true]
+ * @returns {NdArray}
+ */
+NdArray.prototype.bitxor = function (x, copy) {
+  if (arguments.length === 1) {
+    copy = true;
+  }
+  var arr = copy ? this.clone() : this;
+
+  if (_.isNumber(x)) {
+    ops.bxorseq(arr.selection, x);
+    return arr;
+  }
+  x = createArray(x, this.dtype);
+  ops.bxoreq(arr.selection, x.selection);
+  return arr;
+};
+
+/**
+ * Left shift (<<) `x` to the array, element-wise.
+ *
+ * @param {(NdArray|Array|number)} x
+ * @param {boolean} [copy=true]
+ * @returns {NdArray}
+ */
+NdArray.prototype.lshift = function (x, copy) {
+  if (arguments.length === 1) {
+    copy = true;
+  }
+  var arr = copy ? this.clone() : this;
+
+  if (_.isNumber(x)) {
+    ops.lshiftseq(arr.selection, x);
+    return arr;
+  }
+  x = createArray(x, this.dtype);
+  ops.lshifteq(arr.selection, x.selection);
+  return arr;
+};
+
+/**
+ * Right shift (>>) `x` to the array, element-wise.
+ *
+ * @param {(NdArray|Array|number)} x
+ * @param {boolean} [copy=true]
+ * @returns {NdArray}
+ */
+NdArray.prototype.rshift = function (x, copy) {
+  if (arguments.length === 1) {
+    copy = true;
+  }
+  var arr = copy ? this.clone() : this;
+
+  if (_.isNumber(x)) {
+    ops.rshiftseq(arr.selection, x);
+    return arr;
+  }
+  x = createArray(x, this.dtype);
+  ops.rshifteq(arr.selection, x.selection);
+  return arr;
+};
+
+/**
+ * Unsigned right shift (>>>) `x` to the array, element-wise.
+ *
+ * @param {(NdArray|Array|number)} x
+ * @param {boolean} [copy=true]
+ * @returns {NdArray}
+ */
+NdArray.prototype.rrshift = function (x, copy) {
+  if (arguments.length === 1) {
+    copy = true;
+  }
+  var arr = copy ? this.clone() : this;
+
+  if (_.isNumber(x)) {
+    ops.rrshiftseq(arr.selection, x);
+    return arr;
+  }
+  x = createArray(x, this.dtype);
+  ops.rrshifteq(arr.selection, x.selection);
   return arr;
 };
 
@@ -681,6 +813,14 @@ NdArray.prototype.toString = function () {
 * @returns {string}
 */
 NdArray.prototype.inspect = NdArray.prototype.toString;
+
+try {
+  // Stringify the array to make it readable in the console, by a human.
+  var util = require('util');  // node:util
+  NdArray.prototype[util.inspect.custom] = NdArray.prototype.toString;
+} catch (e) {
+  // pass
+}
 
 /**
 * Stringify object to JSON

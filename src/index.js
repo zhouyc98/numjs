@@ -78,6 +78,72 @@ function subtract (a, b) {
 }
 
 /**
+ * Bitwise and arguments, element-wise.
+ *
+ * @param {(NdArray|Array|number)} a
+ * @param {(NdArray|Array|number)} b
+ * @returns {NdArray}
+ */
+function bitand (a, b) {
+  return NdArray.new(a).bitand(b);
+}
+
+/**
+ * Bitwise or arguments, element-wise.
+ *
+ * @param {(NdArray|Array|number)} a
+ * @param {(NdArray|Array|number)} b
+ * @returns {NdArray}
+ */
+function bitor (a, b) {
+  return NdArray.new(a).bitor(b);
+}
+
+/**
+ * Bitwise xor arguments, element-wise.
+ *
+ * @param {(NdArray|Array|number)} a
+ * @param {(NdArray|Array|number)} b
+ * @returns {NdArray}
+ */
+function bitxor (a, b) {
+  return NdArray.new(a).bitxor(b);
+}
+
+/**
+ * Left shift arguments, element-wise.
+ *
+ * @param {(NdArray|Array|number)} a
+ * @param {(NdArray|Array|number)} b
+ * @returns {NdArray}
+ */
+function lshift (a, b) {
+  return NdArray.new(a).lshift(b);
+}
+
+/**
+ * Right shift arguments, element-wise.
+ *
+ * @param {(NdArray|Array|number)} a
+ * @param {(NdArray|Array|number)} b
+ * @returns {NdArray}
+ */
+function rshift (a, b) {
+  return NdArray.new(a).rshift(b);
+}
+
+/**
+ * Unsigned right shift arguments, element-wise.
+ *
+ * @param {(NdArray|Array|number)} a
+ * @param {(NdArray|Array|number)} b
+ * @returns {NdArray}
+ */
+function rrshift (a, b) {
+  return NdArray.new(a).rrshift(b);
+}
+
+/**
  * Return true if two arrays have the same shape and elements, false otherwise.
  * @param {(Array|NdArray)} array1
  * @param {(Array|NdArray)} array2
@@ -830,6 +896,12 @@ module.exports = {
   subtract: subtract,
   multiply: multiply,
   divide: divide,
+  bitand: bitand,
+  bitor: bitor,
+  bitxor: bitxor,
+  lshift: lshift,
+  rshift: rshift,
+  rrshift: rrshift,
   negative: negative,
   equal: equal,
   max: max,

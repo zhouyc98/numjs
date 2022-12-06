@@ -279,7 +279,7 @@ Note that slices do not copy the internal array data, it produces a new views of
 
 ### Basic operations
 
-Arithmetic operators such as `*` (`multiply`), `+` (`add`), `-` (`subtract`), `/` (`divide`), `**` (`pow`), `=` (`assign`) apply elemen-twise. A new array is created and filled with the result:
+Arithmetic operators such as `*` (`multiply`), `+` (`add`), `-` (`subtract`), `/` (`divide`), `**` (`pow`), `=` (`assign`) and bitwise operators such as `&`(`bitand`), `|`(`bitor`), `^`(`bitxor`), `<<`(`lshift`), `>>`(`rshift`), `>>>`(`rrshift`) apply element-wise. A new array is created and filled with the result:
 
 ```js
 > zeros = nj.zeros([3,4]);
@@ -292,7 +292,7 @@ array([[ 1, 1, 1, 1],
        [ 1, 1, 1, 1],
        [ 1, 1, 1, 1]])
 >
-> ones.add(ones)
+> twos = ones.add(ones)
 array([[ 2, 2, 2, 2],
        [ 2, 2, 2, 2],
        [ 2, 2, 2, 2]])
@@ -307,6 +307,16 @@ array([[ 1, 1, 1, 1],
        [ 1, 1, 1, 1],
        [ 1, 1, 1, 1]])
 >
+> ones.bitor(twos)
+array([[ 3, 3, 3, 3],
+       [ 3, 3, 3, 3],
+       [ 3, 3, 3, 3]])
+>
+> ones.lshift(2)
+array([[ 4, 4, 4, 4],
+       [ 4, 4, 4, 4],
+       [ 4, 4, 4, 4]])
+
 ```
 
 To modify an existing array rather than create a new one you can set the `copy` parameter to `false`:
