@@ -1,5 +1,5 @@
 {
-  "name": "numjs",
+  "name": "@zhouyc98/numjs",
   "version": "0.17.0",
   "description": "Like NumPy, in JavaScript",
   "main": "src/index.js",
@@ -59,7 +59,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/nicolaspanel/numjs.git"
+    "url": "git://github.com/zhouyc98/numjs.git"
   },
   "keywords": [
     "ndarray",
@@ -82,7 +82,7 @@
     "shape",
     "numpy"
   ],
-  "author": "Nicolas Panel",
+  "author": "Yucheng Zhou",
   "license": "MIT",
   "readmeFilename": "README.md",
   "browser": {

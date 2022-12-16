@@ -1,6 +1,10 @@
-[![Build Status](https://travis-ci.org/nicolaspanel/numjs.png)](https://travis-ci.org/nicolaspanel/numjs) [![npm version](https://badge.fury.io/js/numjs.svg)](https://badge.fury.io/js/numjs) [![Bower version](https://badge.fury.io/bo/numjs.svg)](https://badge.fury.io/bo/numjs) [![Built with Grunt](https://cdn.gruntjs.com/builtwith.svg)](http://gruntjs.com/)
+This project is modified from https://github.com/nicolaspanel/numjs and does below modifications:
+
+- add bitwise operations for NdArray like .bitand, .bitor, .lshift
+- remove the feature of nj.images.data since it requires path which is hard to browserify
 
 __NumJs__ is a npm/bower package for scientific computing with JavaScript. It contains among other things:
+
  - a powerful N-dimensional array object
  - linear algebra function
  - fast Fourier transform

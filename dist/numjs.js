@@ -2608,7 +2608,7 @@ function generateCWiseOp(proc, typesig) {
 }
 module.exports = generateCWiseOp
 
-},{"uniq":22}],6:[function(require,module,exports){
+},{"uniq":21}],6:[function(require,module,exports){
 "use strict"
 
 // The function below is called when constructing a cwise function object, and does the following:
@@ -20166,7 +20166,7 @@ function ndfft(dir, x, y) {
 }
 
 module.exports = ndfft
-},{"./lib/fft-matrix.js":14,"ndarray":18,"ndarray-ops":17,"typedarray-pool":21}],14:[function(require,module,exports){
+},{"./lib/fft-matrix.js":14,"ndarray":18,"ndarray-ops":17,"typedarray-pool":20}],14:[function(require,module,exports){
 var bits = require('bit-twiddle')
 
 function fft(dir, nrows, ncols, buffer, x_ptr, y_ptr, scratch_ptr) {
@@ -21543,312 +21543,6 @@ function wrappedNDArrayCtor(data, shape, stride, offset) {
 module.exports = wrappedNDArrayCtor
 
 },{"iota-array":10,"is-buffer":11}],19:[function(require,module,exports){
-(function (process){(function (){
-// .dirname, .basename, and .extname methods are extracted from Node.js v8.11.1,
-// backported and transplited with Babel, with backwards-compat fixes
-
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-// resolves . and .. elements in a path array with directory names there
-// must be no slashes, empty elements, or device names (c:\) in the array
-// (so also no leading and trailing slashes - it does not distinguish
-// relative and absolute paths)
-function normalizeArray(parts, allowAboveRoot) {
-  // if the path tries to go above the root, `up` ends up > 0
-  var up = 0;
-  for (var i = parts.length - 1; i >= 0; i--) {
-    var last = parts[i];
-    if (last === '.') {
-      parts.splice(i, 1);
-    } else if (last === '..') {
-      parts.splice(i, 1);
-      up++;
-    } else if (up) {
-      parts.splice(i, 1);
-      up--;
-    }
-  }
-
-  // if the path is allowed to go above the root, restore leading ..s
-  if (allowAboveRoot) {
-    for (; up--; up) {
-      parts.unshift('..');
-    }
-  }
-
-  return parts;
-}
-
-// path.resolve([from ...], to)
-// posix version
-exports.resolve = function() {
-  var resolvedPath = '',
-      resolvedAbsolute = false;
-
-  for (var i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
-    var path = (i >= 0) ? arguments[i] : process.cwd();
-
-    // Skip empty and invalid entries
-    if (typeof path !== 'string') {
-      throw new TypeError('Arguments to path.resolve must be strings');
-    } else if (!path) {
-      continue;
-    }
-
-    resolvedPath = path + '/' + resolvedPath;
-    resolvedAbsolute = path.charAt(0) === '/';
-  }
-
-  // At this point the path should be resolved to a full absolute path, but
-  // handle relative paths to be safe (might happen when process.cwd() fails)
-
-  // Normalize the path
-  resolvedPath = normalizeArray(filter(resolvedPath.split('/'), function(p) {
-    return !!p;
-  }), !resolvedAbsolute).join('/');
-
-  return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
-};
-
-// path.normalize(path)
-// posix version
-exports.normalize = function(path) {
-  var isAbsolute = exports.isAbsolute(path),
-      trailingSlash = substr(path, -1) === '/';
-
-  // Normalize the path
-  path = normalizeArray(filter(path.split('/'), function(p) {
-    return !!p;
-  }), !isAbsolute).join('/');
-
-  if (!path && !isAbsolute) {
-    path = '.';
-  }
-  if (path && trailingSlash) {
-    path += '/';
-  }
-
-  return (isAbsolute ? '/' : '') + path;
-};
-
-// posix version
-exports.isAbsolute = function(path) {
-  return path.charAt(0) === '/';
-};
-
-// posix version
-exports.join = function() {
-  var paths = Array.prototype.slice.call(arguments, 0);
-  return exports.normalize(filter(paths, function(p, index) {
-    if (typeof p !== 'string') {
-      throw new TypeError('Arguments to path.join must be strings');
-    }
-    return p;
-  }).join('/'));
-};
-
-
-// path.relative(from, to)
-// posix version
-exports.relative = function(from, to) {
-  from = exports.resolve(from).substr(1);
-  to = exports.resolve(to).substr(1);
-
-  function trim(arr) {
-    var start = 0;
-    for (; start < arr.length; start++) {
-      if (arr[start] !== '') break;
-    }
-
-    var end = arr.length - 1;
-    for (; end >= 0; end--) {
-      if (arr[end] !== '') break;
-    }
-
-    if (start > end) return [];
-    return arr.slice(start, end - start + 1);
-  }
-
-  var fromParts = trim(from.split('/'));
-  var toParts = trim(to.split('/'));
-
-  var length = Math.min(fromParts.length, toParts.length);
-  var samePartsLength = length;
-  for (var i = 0; i < length; i++) {
-    if (fromParts[i] !== toParts[i]) {
-      samePartsLength = i;
-      break;
-    }
-  }
-
-  var outputParts = [];
-  for (var i = samePartsLength; i < fromParts.length; i++) {
-    outputParts.push('..');
-  }
-
-  outputParts = outputParts.concat(toParts.slice(samePartsLength));
-
-  return outputParts.join('/');
-};
-
-exports.sep = '/';
-exports.delimiter = ':';
-
-exports.dirname = function (path) {
-  if (typeof path !== 'string') path = path + '';
-  if (path.length === 0) return '.';
-  var code = path.charCodeAt(0);
-  var hasRoot = code === 47 /*/*/;
-  var end = -1;
-  var matchedSlash = true;
-  for (var i = path.length - 1; i >= 1; --i) {
-    code = path.charCodeAt(i);
-    if (code === 47 /*/*/) {
-        if (!matchedSlash) {
-          end = i;
-          break;
-        }
-      } else {
-      // We saw the first non-path separator
-      matchedSlash = false;
-    }
-  }
-
-  if (end === -1) return hasRoot ? '/' : '.';
-  if (hasRoot && end === 1) {
-    // return '//';
-    // Backwards-compat fix:
-    return '/';
-  }
-  return path.slice(0, end);
-};
-
-function basename(path) {
-  if (typeof path !== 'string') path = path + '';
-
-  var start = 0;
-  var end = -1;
-  var matchedSlash = true;
-  var i;
-
-  for (i = path.length - 1; i >= 0; --i) {
-    if (path.charCodeAt(i) === 47 /*/*/) {
-        // If we reached a path separator that was not part of a set of path
-        // separators at the end of the string, stop now
-        if (!matchedSlash) {
-          start = i + 1;
-          break;
-        }
-      } else if (end === -1) {
-      // We saw the first non-path separator, mark this as the end of our
-      // path component
-      matchedSlash = false;
-      end = i + 1;
-    }
-  }
-
-  if (end === -1) return '';
-  return path.slice(start, end);
-}
-
-// Uses a mixed approach for backwards-compatibility, as ext behavior changed
-// in new Node.js versions, so only basename() above is backported here
-exports.basename = function (path, ext) {
-  var f = basename(path);
-  if (ext && f.substr(-1 * ext.length) === ext) {
-    f = f.substr(0, f.length - ext.length);
-  }
-  return f;
-};
-
-exports.extname = function (path) {
-  if (typeof path !== 'string') path = path + '';
-  var startDot = -1;
-  var startPart = 0;
-  var end = -1;
-  var matchedSlash = true;
-  // Track the state of characters (if any) we see before our first dot and
-  // after any path separator we find
-  var preDotState = 0;
-  for (var i = path.length - 1; i >= 0; --i) {
-    var code = path.charCodeAt(i);
-    if (code === 47 /*/*/) {
-        // If we reached a path separator that was not part of a set of path
-        // separators at the end of the string, stop now
-        if (!matchedSlash) {
-          startPart = i + 1;
-          break;
-        }
-        continue;
-      }
-    if (end === -1) {
-      // We saw the first non-path separator, mark this as the end of our
-      // extension
-      matchedSlash = false;
-      end = i + 1;
-    }
-    if (code === 46 /*.*/) {
-        // If this is our first dot, mark it as the start of our extension
-        if (startDot === -1)
-          startDot = i;
-        else if (preDotState !== 1)
-          preDotState = 1;
-    } else if (startDot !== -1) {
-      // We saw a non-dot and non-path separator before our dot, so we should
-      // have a good chance at having a non-empty extension
-      preDotState = -1;
-    }
-  }
-
-  if (startDot === -1 || end === -1 ||
-      // We saw a non-dot character immediately before the dot
-      preDotState === 0 ||
-      // The (right-most) trimmed path component is exactly '..'
-      preDotState === 1 && startDot === end - 1 && startDot === startPart + 1) {
-    return '';
-  }
-  return path.slice(startDot, end);
-};
-
-function filter (xs, f) {
-    if (xs.filter) return xs.filter(f);
-    var res = [];
-    for (var i = 0; i < xs.length; i++) {
-        if (f(xs[i], i, xs)) res.push(xs[i]);
-    }
-    return res;
-}
-
-// String.prototype.substr - negative index don't work in IE8
-var substr = 'ab'.substr(-1) === 'b'
-    ? function (str, start, len) { return str.substr(start, len) }
-    : function (str, start, len) {
-        if (start < 0) start = str.length + start;
-        return str.substr(start, len);
-    }
-;
-
-}).call(this)}).call(this,require('_process'))
-},{"_process":20}],20:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -22034,7 +21728,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],21:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 (function (global){(function (){
 'use strict'
 
@@ -22289,7 +21983,7 @@ exports.clearCache = function clearCache() {
 }
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"bit-twiddle":2,"buffer":3,"dup":8}],22:[function(require,module,exports){
+},{"bit-twiddle":2,"buffer":3,"dup":8}],21:[function(require,module,exports){
 "use strict"
 
 function unique_pred(list, compare) {
@@ -22348,7 +22042,7 @@ function unique(list, compare, sorted) {
 
 module.exports = unique
 
-},{}],23:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -22373,14 +22067,14 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],24:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],25:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 (function (process,global){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -22970,7 +22664,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":24,"_process":20,"inherits":23}],26:[function(require,module,exports){
+},{"./support/isBuffer":23,"_process":19,"inherits":22}],25:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -22978,7 +22672,7 @@ module.exports = {
   nFloatingValues: 5
 };
 
-},{}],27:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -22993,7 +22687,7 @@ module.exports = {
   array: Array
 };
 
-},{}],28:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -23014,7 +22708,7 @@ module.exports = {
   }
 };
 
-},{}],29:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 'use strict';
 
 module.exports = function areaSum (h0, w0, H, W, SAT) {
@@ -23028,7 +22722,7 @@ module.exports = function areaSum (h0, w0, H, W, SAT) {
         : -SAT.selection.get(y1, x0) + SAT.selection.get(y1, x1);
 };
 
-},{}],30:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 'use strict';
 
 var areaSum = require('./area-sum');
@@ -23037,17 +22731,16 @@ module.exports = function areaValue (h0, w0, H, W, SAT) {
   return areaSum(h0, w0, H, W, SAT) / (H * W);
 };
 
-},{"./area-sum":29}],31:[function(require,module,exports){
-(function (__dirname){(function (){
+},{"./area-sum":28}],30:[function(require,module,exports){
 'use strict';
-var path = require('path');
+// var path = require('path');
 
 var read = require('./read');
 
-var DATA_DIR = path.join(path.resolve(__dirname), '../../data');
+var DATA_DIR = '../../data/';
 
 function getArray (fileName) {
-  return read(path.join(DATA_DIR, fileName));
+  return read(DATA_DIR + fileName);
 }
 
 var exports = {};
@@ -23108,8 +22801,7 @@ Object.defineProperty(exports, 'moon', {
 
 module.exports = exports;
 
-}).call(this)}).call(this,"/src/images")
-},{"./read":35,"path":19}],32:[function(require,module,exports){
+},{"./read":34}],31:[function(require,module,exports){
 'use strict';
 
 var NdArray = require('../ndarray');
@@ -23118,7 +22810,7 @@ module.exports = function flipImage (img) {
   return new NdArray(img.selection.step(null, -1));
 };
 
-},{"../ndarray":45}],33:[function(require,module,exports){
+},{"../ndarray":44}],32:[function(require,module,exports){
 'use strict';
 
 /**
@@ -23144,13 +22836,13 @@ module.exports = {
   flip: require('./flip')
 };
 
-},{"./area-sum":29,"./area-value":30,"./data":31,"./flip":32,"./read":35,"./resize":36,"./rgb2gray":37,"./sat":38,"./save":39,"./scharr":40,"./sobel":41,"./ssat":42}],34:[function(require,module,exports){
+},{"./area-sum":28,"./area-value":29,"./data":30,"./flip":31,"./read":34,"./resize":35,"./rgb2gray":36,"./sat":37,"./save":38,"./scharr":39,"./sobel":40,"./ssat":41}],33:[function(require,module,exports){
 'use strict';
 
 
 var NdArray = require('../ndarray');
 
-var doCheckIsGrayscale = require('cwise/lib/wrapper')({"args":["array","array","array"],"pre":{"body":"{this_isgray=!0}","args":[],"thisVars":["this_isgray"],"localVars":[]},"body":{"body":"{_inline_82_arg0_===_inline_82_arg1_&&_inline_82_arg1_===_inline_82_arg2_||(this_isgray=!1)}","args":[{"name":"_inline_82_arg0_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_82_arg1_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_82_arg2_","lvalue":false,"rvalue":true,"count":1}],"thisVars":["this_isgray"],"localVars":[]},"post":{"body":"{return this_isgray}","args":[],"thisVars":["this_isgray"],"localVars":[]},"debug":false,"funcName":"doCheckIsGrayscaleCwise","blockSize":64});
+var doCheckIsGrayscale = require('cwise/lib/wrapper')({"args":["array","array","array"],"pre":{"body":"{this_isgray=!0}","args":[],"thisVars":["this_isgray"],"localVars":[]},"body":{"body":"{_inline_40_arg0_===_inline_40_arg1_&&_inline_40_arg1_===_inline_40_arg2_||(this_isgray=!1)}","args":[{"name":"_inline_40_arg0_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_40_arg1_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_40_arg2_","lvalue":false,"rvalue":true,"count":1}],"thisVars":["this_isgray"],"localVars":[]},"post":{"body":"{return this_isgray}","args":[],"thisVars":["this_isgray"],"localVars":[]},"debug":false,"funcName":"doCheckIsGrayscaleCwise","blockSize":64});
 
 module.exports = function isGrayscaleImage (arr) {
   if (arr instanceof NdArray) {
@@ -23168,7 +22860,7 @@ module.exports = function isGrayscaleImage (arr) {
   return false;
 };
 
-},{"../ndarray":45,"cwise/lib/wrapper":7}],35:[function(require,module,exports){
+},{"../ndarray":44,"cwise/lib/wrapper":7}],34:[function(require,module,exports){
 'use strict';
 
 /* global HTMLCanvasElement */
@@ -23222,7 +22914,7 @@ function processImg (img) {
   return new NdArray(hxw);
 }
 
-},{"../errors":28,"../ndarray":45,"./is-grayscale":34,"ndarray":18}],36:[function(require,module,exports){
+},{"../errors":27,"../ndarray":44,"./is-grayscale":33,"ndarray":18}],35:[function(require,module,exports){
 'use strict';
 
 var _ = require('./utils');
@@ -23267,7 +22959,7 @@ module.exports = function resizeImageDom (img, height, width) {
   return new NdArray(hxw);
 };
 
-},{"../ndarray":45,"./utils":43,"ndarray":18}],37:[function(require,module,exports){
+},{"../ndarray":44,"./utils":42,"ndarray":18}],36:[function(require,module,exports){
 'use strict';
 
 
@@ -23275,7 +22967,7 @@ var NdArray = require('../ndarray');
 var __ = require('../utils');
 
 // takes ~157ms on a 5000x5000 image
-var doRgb2gray = require('cwise/lib/wrapper')({"args":["array","array","array","array"],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_76_arg0_=4899*_inline_76_arg1_+9617*_inline_76_arg2_+1868*_inline_76_arg3_+8192>>14}","args":[{"name":"_inline_76_arg0_","lvalue":true,"rvalue":false,"count":1},{"name":"_inline_76_arg1_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_76_arg2_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_76_arg3_","lvalue":false,"rvalue":true,"count":1}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"rgb2grayCwise","blockSize":64});
+var doRgb2gray = require('cwise/lib/wrapper')({"args":["array","array","array","array"],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_37_arg0_=4899*_inline_37_arg1_+9617*_inline_37_arg2_+1868*_inline_37_arg3_+8192>>14}","args":[{"name":"_inline_37_arg0_","lvalue":true,"rvalue":false,"count":1},{"name":"_inline_37_arg1_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_37_arg2_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_37_arg3_","lvalue":false,"rvalue":true,"count":1}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"rgb2grayCwise","blockSize":64});
 
 /**
  * Compute Grayscale version of an RGB image.
@@ -23303,14 +22995,14 @@ module.exports = function rgb2gray (img) {
   return out;
 };
 
-},{"../ndarray":45,"../utils":46,"cwise/lib/wrapper":7}],38:[function(require,module,exports){
+},{"../ndarray":44,"../utils":45,"cwise/lib/wrapper":7}],37:[function(require,module,exports){
 'use strict';
 
 
 var NdArray = require('../ndarray');
 var rgb2gray = require('./rgb2gray');
 
-var doIntegrate = require('cwise/lib/wrapper')({"args":["array","array","index",{"offset":[-1,-1],"array":0},{"offset":[-1,0],"array":0},{"offset":[0,-1],"array":0}],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_67_arg0_=0!==_inline_67_arg2_[0]&&0!==_inline_67_arg2_[1]?_inline_67_arg1_+_inline_67_arg4_+_inline_67_arg5_-_inline_67_arg3_:0===_inline_67_arg2_[0]&&0===_inline_67_arg2_[1]?_inline_67_arg1_:0===_inline_67_arg2_[0]?_inline_67_arg1_+_inline_67_arg5_:_inline_67_arg1_+_inline_67_arg4_}","args":[{"name":"_inline_67_arg0_","lvalue":true,"rvalue":false,"count":1},{"name":"_inline_67_arg1_","lvalue":false,"rvalue":true,"count":4},{"name":"_inline_67_arg2_","lvalue":false,"rvalue":true,"count":5},{"name":"_inline_67_arg3_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_67_arg4_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_67_arg5_","lvalue":false,"rvalue":true,"count":2}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"doIntegrateBody","blockSize":64});
+var doIntegrate = require('cwise/lib/wrapper')({"args":["array","array","index",{"offset":[-1,-1],"array":0},{"offset":[-1,0],"array":0},{"offset":[0,-1],"array":0}],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_25_arg0_=0!==_inline_25_arg2_[0]&&0!==_inline_25_arg2_[1]?_inline_25_arg1_+_inline_25_arg4_+_inline_25_arg5_-_inline_25_arg3_:0===_inline_25_arg2_[0]&&0===_inline_25_arg2_[1]?_inline_25_arg1_:0===_inline_25_arg2_[0]?_inline_25_arg1_+_inline_25_arg5_:_inline_25_arg1_+_inline_25_arg4_}","args":[{"name":"_inline_25_arg0_","lvalue":true,"rvalue":false,"count":1},{"name":"_inline_25_arg1_","lvalue":false,"rvalue":true,"count":4},{"name":"_inline_25_arg2_","lvalue":false,"rvalue":true,"count":5},{"name":"_inline_25_arg3_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_25_arg4_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_25_arg5_","lvalue":false,"rvalue":true,"count":2}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"doIntegrateBody","blockSize":64});
 
 /**
  * Compute Sum Area Table, also known as the integral of the image
@@ -23329,7 +23021,7 @@ module.exports = function computeSumAreaTable (img) {
   return out;
 };
 
-},{"../ndarray":45,"./rgb2gray":37,"cwise/lib/wrapper":7}],39:[function(require,module,exports){
+},{"../ndarray":44,"./rgb2gray":36,"cwise/lib/wrapper":7}],38:[function(require,module,exports){
 'use strict';
 
 var _ = require('./utils');
@@ -23362,7 +23054,7 @@ module.exports = function saveImageDom (img, dest) {
   }
 };
 
-},{"../errors":28,"./utils":43}],40:[function(require,module,exports){
+},{"../errors":27,"./utils":42}],39:[function(require,module,exports){
 'use strict';
 
 
@@ -23371,7 +23063,7 @@ var NdArray = require('../ndarray');
 var __ = require('../utils');
 var rgb2gray = require('./rgb2gray');
 
-var doScharr = require('cwise/lib/wrapper')({"args":["array","array",{"offset":[-1,-1],"array":1},{"offset":[-1,0],"array":1},{"offset":[-1,1],"array":1},{"offset":[0,-1],"array":1},{"offset":[0,1],"array":1},{"offset":[1,-1],"array":1},{"offset":[1,0],"array":1},{"offset":[1,1],"array":1}],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{var _inline_79_q=3*_inline_79_arg2_+10*_inline_79_arg3_+3*_inline_79_arg4_-3*_inline_79_arg7_-10*_inline_79_arg8_-3*_inline_79_arg9_,_inline_79_s=3*_inline_79_arg2_-3*_inline_79_arg4_+10*_inline_79_arg5_-10*_inline_79_arg6_+3*_inline_79_arg7_-3*_inline_79_arg9_;_inline_79_arg0_=Math.sqrt(_inline_79_s*_inline_79_s+_inline_79_q*_inline_79_q)}","args":[{"name":"_inline_79_arg0_","lvalue":true,"rvalue":false,"count":1},{"name":"_inline_79_arg1_","lvalue":false,"rvalue":false,"count":0},{"name":"_inline_79_arg2_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_79_arg3_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_79_arg4_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_79_arg5_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_79_arg6_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_79_arg7_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_79_arg8_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_79_arg9_","lvalue":false,"rvalue":true,"count":2}],"thisVars":[],"localVars":["_inline_79_q","_inline_79_s"]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"doSobelBody","blockSize":64});
+var doScharr = require('cwise/lib/wrapper')({"args":["array","array",{"offset":[-1,-1],"array":1},{"offset":[-1,0],"array":1},{"offset":[-1,1],"array":1},{"offset":[0,-1],"array":1},{"offset":[0,1],"array":1},{"offset":[1,-1],"array":1},{"offset":[1,0],"array":1},{"offset":[1,1],"array":1}],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{var _inline_31_q=3*_inline_31_arg2_+10*_inline_31_arg3_+3*_inline_31_arg4_-3*_inline_31_arg7_-10*_inline_31_arg8_-3*_inline_31_arg9_,_inline_31_s=3*_inline_31_arg2_-3*_inline_31_arg4_+10*_inline_31_arg5_-10*_inline_31_arg6_+3*_inline_31_arg7_-3*_inline_31_arg9_;_inline_31_arg0_=Math.sqrt(_inline_31_s*_inline_31_s+_inline_31_q*_inline_31_q)}","args":[{"name":"_inline_31_arg0_","lvalue":true,"rvalue":false,"count":1},{"name":"_inline_31_arg1_","lvalue":false,"rvalue":false,"count":0},{"name":"_inline_31_arg2_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_31_arg3_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_31_arg4_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_31_arg5_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_31_arg6_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_31_arg7_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_31_arg8_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_31_arg9_","lvalue":false,"rvalue":true,"count":2}],"thisVars":[],"localVars":["_inline_31_q","_inline_31_s"]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"doSobelBody","blockSize":64});
 
 /**
  * Find the edge magnitude using the Scharr transform.
@@ -23401,7 +23093,7 @@ module.exports = function computeScharr (img) {
   return out.divide(16 * Math.sqrt(2), false);
 };
 
-},{"../ndarray":45,"../utils":46,"./rgb2gray":37,"cwise/lib/wrapper":7,"ndarray-ops":17}],41:[function(require,module,exports){
+},{"../ndarray":44,"../utils":45,"./rgb2gray":36,"cwise/lib/wrapper":7,"ndarray-ops":17}],40:[function(require,module,exports){
 'use strict';
 
 
@@ -23410,7 +23102,7 @@ var NdArray = require('../ndarray');
 var __ = require('../utils');
 var rgb2gray = require('./rgb2gray');
 
-var doSobel = require('cwise/lib/wrapper')({"args":["array","array",{"offset":[-1,-1],"array":1},{"offset":[-1,0],"array":1},{"offset":[-1,1],"array":1},{"offset":[0,-1],"array":1},{"offset":[0,1],"array":1},{"offset":[1,-1],"array":1},{"offset":[1,0],"array":1},{"offset":[1,1],"array":1}],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{var _inline_73_q=_inline_73_arg2_+2*_inline_73_arg3_+_inline_73_arg4_-_inline_73_arg7_-2*_inline_73_arg8_-_inline_73_arg9_,_inline_73_s=_inline_73_arg2_-_inline_73_arg4_+2*_inline_73_arg5_-2*_inline_73_arg6_+_inline_73_arg7_-_inline_73_arg9_;_inline_73_arg0_=Math.sqrt(_inline_73_s*_inline_73_s+_inline_73_q*_inline_73_q)}","args":[{"name":"_inline_73_arg0_","lvalue":true,"rvalue":false,"count":1},{"name":"_inline_73_arg1_","lvalue":false,"rvalue":false,"count":0},{"name":"_inline_73_arg2_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_73_arg3_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_73_arg4_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_73_arg5_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_73_arg6_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_73_arg7_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_73_arg8_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_73_arg9_","lvalue":false,"rvalue":true,"count":2}],"thisVars":[],"localVars":["_inline_73_q","_inline_73_s"]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"doSobelBody","blockSize":64});
+var doSobel = require('cwise/lib/wrapper')({"args":["array","array",{"offset":[-1,-1],"array":1},{"offset":[-1,0],"array":1},{"offset":[-1,1],"array":1},{"offset":[0,-1],"array":1},{"offset":[0,1],"array":1},{"offset":[1,-1],"array":1},{"offset":[1,0],"array":1},{"offset":[1,1],"array":1}],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{var _inline_28_q=_inline_28_arg2_+2*_inline_28_arg3_+_inline_28_arg4_-_inline_28_arg7_-2*_inline_28_arg8_-_inline_28_arg9_,_inline_28_s=_inline_28_arg2_-_inline_28_arg4_+2*_inline_28_arg5_-2*_inline_28_arg6_+_inline_28_arg7_-_inline_28_arg9_;_inline_28_arg0_=Math.sqrt(_inline_28_s*_inline_28_s+_inline_28_q*_inline_28_q)}","args":[{"name":"_inline_28_arg0_","lvalue":true,"rvalue":false,"count":1},{"name":"_inline_28_arg1_","lvalue":false,"rvalue":false,"count":0},{"name":"_inline_28_arg2_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_28_arg3_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_28_arg4_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_28_arg5_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_28_arg6_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_28_arg7_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_28_arg8_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_28_arg9_","lvalue":false,"rvalue":true,"count":2}],"thisVars":[],"localVars":["_inline_28_q","_inline_28_s"]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"doSobelBody","blockSize":64});
 
 /**
  * Find the edge magnitude using the Sobel transform.
@@ -23442,14 +23134,14 @@ module.exports = function computeSobel (img) {
   return out.divide(4 * Math.sqrt(2), false);
 };
 
-},{"../ndarray":45,"../utils":46,"./rgb2gray":37,"cwise/lib/wrapper":7,"ndarray-ops":17}],42:[function(require,module,exports){
+},{"../ndarray":44,"../utils":45,"./rgb2gray":36,"cwise/lib/wrapper":7,"ndarray-ops":17}],41:[function(require,module,exports){
 'use strict';
 
 
 var NdArray = require('../ndarray');
 var rgb2gray = require('./rgb2gray');
 
-var doIntegrate = require('cwise/lib/wrapper')({"args":["array","array","index",{"offset":[-1,-1],"array":0},{"offset":[-1,0],"array":0},{"offset":[0,-1],"array":0}],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_70_arg0_=0!==_inline_70_arg2_[0]&&0!==_inline_70_arg2_[1]?_inline_70_arg1_*_inline_70_arg1_+_inline_70_arg4_+_inline_70_arg5_-_inline_70_arg3_:0===_inline_70_arg2_[0]&&0===_inline_70_arg2_[1]?_inline_70_arg1_*_inline_70_arg1_:0===_inline_70_arg2_[0]?_inline_70_arg1_*_inline_70_arg1_+_inline_70_arg5_:_inline_70_arg1_*_inline_70_arg1_+_inline_70_arg4_}","args":[{"name":"_inline_70_arg0_","lvalue":true,"rvalue":false,"count":1},{"name":"_inline_70_arg1_","lvalue":false,"rvalue":true,"count":8},{"name":"_inline_70_arg2_","lvalue":false,"rvalue":true,"count":5},{"name":"_inline_70_arg3_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_70_arg4_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_70_arg5_","lvalue":false,"rvalue":true,"count":2}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"doIntegrateBody","blockSize":64});
+var doIntegrate = require('cwise/lib/wrapper')({"args":["array","array","index",{"offset":[-1,-1],"array":0},{"offset":[-1,0],"array":0},{"offset":[0,-1],"array":0}],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_34_arg0_=0!==_inline_34_arg2_[0]&&0!==_inline_34_arg2_[1]?_inline_34_arg1_*_inline_34_arg1_+_inline_34_arg4_+_inline_34_arg5_-_inline_34_arg3_:0===_inline_34_arg2_[0]&&0===_inline_34_arg2_[1]?_inline_34_arg1_*_inline_34_arg1_:0===_inline_34_arg2_[0]?_inline_34_arg1_*_inline_34_arg1_+_inline_34_arg5_:_inline_34_arg1_*_inline_34_arg1_+_inline_34_arg4_}","args":[{"name":"_inline_34_arg0_","lvalue":true,"rvalue":false,"count":1},{"name":"_inline_34_arg1_","lvalue":false,"rvalue":true,"count":8},{"name":"_inline_34_arg2_","lvalue":false,"rvalue":true,"count":5},{"name":"_inline_34_arg3_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_34_arg4_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_34_arg5_","lvalue":false,"rvalue":true,"count":2}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"doIntegrateBody","blockSize":64});
 
 /**
  * Compute Squared Sum Area Table, also known as the integral of the squared image
@@ -23469,7 +23161,7 @@ module.exports = function computeSquaredSumAreaTable (img) {
   return out;
 };
 
-},{"../ndarray":45,"./rgb2gray":37,"cwise/lib/wrapper":7}],43:[function(require,module,exports){
+},{"../ndarray":44,"./rgb2gray":36,"cwise/lib/wrapper":7}],42:[function(require,module,exports){
 'use strict';
 
 var NdArray = require('../ndarray');
@@ -23588,7 +23280,7 @@ module.exports.setRawData = function setRawData (array, data) {
   }
 };
 
-},{"../ndarray":45}],44:[function(require,module,exports){
+},{"../ndarray":44}],43:[function(require,module,exports){
 'use strict';
 
 var ndarray = require('ndarray');
@@ -24021,7 +23713,7 @@ function softmax (x) {
   return e;
 }
 
-var doSigmoid = require('cwise/lib/wrapper')({"args":["array","scalar"],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_43_arg0_=_inline_43_arg0_<-30?0:_inline_43_arg0_>30?1:1/(1+Math.exp(-1*_inline_43_arg1_*_inline_43_arg0_))}","args":[{"name":"_inline_43_arg0_","lvalue":true,"rvalue":true,"count":4},{"name":"_inline_43_arg1_","lvalue":false,"rvalue":true,"count":1}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"sigmoidCwise","blockSize":64});
+var doSigmoid = require('cwise/lib/wrapper')({"args":["array","scalar"],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_1_arg0_=_inline_1_arg0_<-30?0:_inline_1_arg0_>30?1:1/(1+Math.exp(-1*_inline_1_arg1_*_inline_1_arg0_))}","args":[{"name":"_inline_1_arg0_","lvalue":true,"rvalue":true,"count":4},{"name":"_inline_1_arg1_","lvalue":false,"rvalue":true,"count":1}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"sigmoidCwise","blockSize":64});
 
 /**
  * Return the sigmoid of the input array, element-wise.
@@ -24036,7 +23728,7 @@ function sigmoid (x, t) {
   return x;
 }
 
-var doClip = require('cwise/lib/wrapper')({"args":["array","scalar","scalar"],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_46_arg0_=Math.min(Math.max(_inline_46_arg1_,_inline_46_arg0_),_inline_46_arg2_)}","args":[{"name":"_inline_46_arg0_","lvalue":true,"rvalue":true,"count":2},{"name":"_inline_46_arg1_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_46_arg2_","lvalue":false,"rvalue":true,"count":1}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"clipCwise","blockSize":64});
+var doClip = require('cwise/lib/wrapper')({"args":["array","scalar","scalar"],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_4_arg0_=Math.min(Math.max(_inline_4_arg1_,_inline_4_arg0_),_inline_4_arg2_)}","args":[{"name":"_inline_4_arg0_","lvalue":true,"rvalue":true,"count":2},{"name":"_inline_4_arg1_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_4_arg2_","lvalue":false,"rvalue":true,"count":1}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"clipCwise","blockSize":64});
 
 /**
  * Clip (limit) the values in an array between min and max, element-wise.
@@ -24058,7 +23750,7 @@ function clip (x, min, max) {
   return s;
 }
 
-var doLeakyRelu = require('cwise/lib/wrapper')({"args":["array","scalar"],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_49_arg0_=Math.max(_inline_49_arg1_*_inline_49_arg0_,_inline_49_arg0_)}","args":[{"name":"_inline_49_arg0_","lvalue":true,"rvalue":true,"count":3},{"name":"_inline_49_arg1_","lvalue":false,"rvalue":true,"count":1}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"leakyReluCwise","blockSize":64});
+var doLeakyRelu = require('cwise/lib/wrapper')({"args":["array","scalar"],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_7_arg0_=Math.max(_inline_7_arg1_*_inline_7_arg0_,_inline_7_arg0_)}","args":[{"name":"_inline_7_arg0_","lvalue":true,"rvalue":true,"count":3},{"name":"_inline_7_arg1_","lvalue":false,"rvalue":true,"count":1}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"leakyReluCwise","blockSize":64});
 
 function leakyRelu (x, alpha) {
   alpha = alpha || 1e-3;
@@ -24067,7 +23759,7 @@ function leakyRelu (x, alpha) {
   return s;
 }
 
-var doTanh = require('cwise/lib/wrapper')({"args":["array"],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_52_arg0_=(Math.exp(2*_inline_52_arg0_)-1)/(Math.exp(2*_inline_52_arg0_)+1)}","args":[{"name":"_inline_52_arg0_","lvalue":true,"rvalue":true,"count":3}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"tanhCwise","blockSize":64});
+var doTanh = require('cwise/lib/wrapper')({"args":["array"],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_10_arg0_=(Math.exp(2*_inline_10_arg0_)-1)/(Math.exp(2*_inline_10_arg0_)+1)}","args":[{"name":"_inline_10_arg0_","lvalue":true,"rvalue":true,"count":3}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"tanhCwise","blockSize":64});
 
 /**
  * Return hyperbolic tangent of the input array, element-wise.
@@ -24503,7 +24195,7 @@ module.exports = {
   images: require('./images')
 };
 
-},{"./config":26,"./dtypes":27,"./errors":28,"./images":33,"./ndarray":45,"./utils":46,"cwise/lib/wrapper":7,"ndarray":18,"ndarray-fft":13,"ndarray-ops":17}],45:[function(require,module,exports){
+},{"./config":25,"./dtypes":26,"./errors":27,"./images":32,"./ndarray":44,"./utils":45,"cwise/lib/wrapper":7,"ndarray":18,"ndarray-fft":13,"ndarray-ops":17}],44:[function(require,module,exports){
 'use strict';
 
 var ndarray = require('ndarray');
@@ -25438,11 +25130,11 @@ NdArray.prototype.iteraxis = function (axis, cb) {
   }
 };
 
-var doConjMuleq = require('cwise/lib/wrapper')({"args":["array","array","array","array"],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{var _inline_55_c=_inline_55_arg2_,_inline_55_f=_inline_55_arg3_,_inline_55_i=_inline_55_arg0_,_inline_55_o=_inline_55_arg1_,_inline_55_t=_inline_55_i*(_inline_55_c+_inline_55_f);_inline_55_arg0_=_inline_55_t-_inline_55_f*(_inline_55_i+_inline_55_o),_inline_55_arg1_=_inline_55_t+_inline_55_c*(_inline_55_o-_inline_55_i)}","args":[{"name":"_inline_55_arg0_","lvalue":true,"rvalue":true,"count":2},{"name":"_inline_55_arg1_","lvalue":true,"rvalue":true,"count":2},{"name":"_inline_55_arg2_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_55_arg3_","lvalue":false,"rvalue":true,"count":1}],"thisVars":[],"localVars":["_inline_55_c","_inline_55_f","_inline_55_i","_inline_55_o","_inline_55_t"]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"cwise","blockSize":64});
+var doConjMuleq = require('cwise/lib/wrapper')({"args":["array","array","array","array"],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{var _inline_13_c=_inline_13_arg2_,_inline_13_f=_inline_13_arg3_,_inline_13_i=_inline_13_arg0_,_inline_13_o=_inline_13_arg1_,_inline_13_t=_inline_13_i*(_inline_13_c+_inline_13_f);_inline_13_arg0_=_inline_13_t-_inline_13_f*(_inline_13_i+_inline_13_o),_inline_13_arg1_=_inline_13_t+_inline_13_c*(_inline_13_o-_inline_13_i)}","args":[{"name":"_inline_13_arg0_","lvalue":true,"rvalue":true,"count":2},{"name":"_inline_13_arg1_","lvalue":true,"rvalue":true,"count":2},{"name":"_inline_13_arg2_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_13_arg3_","lvalue":false,"rvalue":true,"count":1}],"thisVars":[],"localVars":["_inline_13_c","_inline_13_f","_inline_13_i","_inline_13_o","_inline_13_t"]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"cwise","blockSize":64});
 
-var doConvolve3x3 = require('cwise/lib/wrapper')({"args":["array","array","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar",{"offset":[-1,-1],"array":1},{"offset":[-1,0],"array":1},{"offset":[-1,1],"array":1},{"offset":[0,-1],"array":1},{"offset":[0,1],"array":1},{"offset":[1,-1],"array":1},{"offset":[1,0],"array":1},{"offset":[1,1],"array":1}],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_58_arg0_=_inline_58_arg11_*_inline_58_arg10_+_inline_58_arg12_*_inline_58_arg9_+_inline_58_arg13_*_inline_58_arg8_+_inline_58_arg14_*_inline_58_arg7_+_inline_58_arg1_*_inline_58_arg6_+_inline_58_arg15_*_inline_58_arg5_+_inline_58_arg16_*_inline_58_arg4_+_inline_58_arg17_*_inline_58_arg3_+_inline_58_arg18_*_inline_58_arg2_}","args":[{"name":"_inline_58_arg0_","lvalue":true,"rvalue":false,"count":1},{"name":"_inline_58_arg1_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_58_arg2_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_58_arg3_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_58_arg4_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_58_arg5_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_58_arg6_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_58_arg7_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_58_arg8_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_58_arg9_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_58_arg10_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_58_arg11_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_58_arg12_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_58_arg13_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_58_arg14_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_58_arg15_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_58_arg16_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_58_arg17_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_58_arg18_","lvalue":false,"rvalue":true,"count":1}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"cwise","blockSize":64});
+var doConvolve3x3 = require('cwise/lib/wrapper')({"args":["array","array","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar",{"offset":[-1,-1],"array":1},{"offset":[-1,0],"array":1},{"offset":[-1,1],"array":1},{"offset":[0,-1],"array":1},{"offset":[0,1],"array":1},{"offset":[1,-1],"array":1},{"offset":[1,0],"array":1},{"offset":[1,1],"array":1}],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_16_arg0_=_inline_16_arg11_*_inline_16_arg10_+_inline_16_arg12_*_inline_16_arg9_+_inline_16_arg13_*_inline_16_arg8_+_inline_16_arg14_*_inline_16_arg7_+_inline_16_arg1_*_inline_16_arg6_+_inline_16_arg15_*_inline_16_arg5_+_inline_16_arg16_*_inline_16_arg4_+_inline_16_arg17_*_inline_16_arg3_+_inline_16_arg18_*_inline_16_arg2_}","args":[{"name":"_inline_16_arg0_","lvalue":true,"rvalue":false,"count":1},{"name":"_inline_16_arg1_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_16_arg2_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_16_arg3_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_16_arg4_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_16_arg5_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_16_arg6_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_16_arg7_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_16_arg8_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_16_arg9_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_16_arg10_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_16_arg11_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_16_arg12_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_16_arg13_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_16_arg14_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_16_arg15_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_16_arg16_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_16_arg17_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_16_arg18_","lvalue":false,"rvalue":true,"count":1}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"cwise","blockSize":64});
 
-var doConvolve5x5 = require('cwise/lib/wrapper')({"args":["index","array","array","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar",{"offset":[-2,-2],"array":1},{"offset":[-2,-1],"array":1},{"offset":[-2,0],"array":1},{"offset":[-2,1],"array":1},{"offset":[-2,2],"array":1},{"offset":[-1,-2],"array":1},{"offset":[-1,-1],"array":1},{"offset":[-1,0],"array":1},{"offset":[-1,1],"array":1},{"offset":[-1,2],"array":1},{"offset":[0,-2],"array":1},{"offset":[0,-1],"array":1},{"offset":[0,1],"array":1},{"offset":[0,2],"array":1},{"offset":[1,-2],"array":1},{"offset":[1,-1],"array":1},{"offset":[1,0],"array":1},{"offset":[1,1],"array":1},{"offset":[1,2],"array":1},{"offset":[2,-2],"array":1},{"offset":[2,-1],"array":1},{"offset":[2,0],"array":1},{"offset":[2,1],"array":1},{"offset":[2,2],"array":1}],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_61_arg1_=_inline_61_arg0_[0]<2||_inline_61_arg0_[1]<2?0:_inline_61_arg28_*_inline_61_arg27_+_inline_61_arg29_*_inline_61_arg26_+_inline_61_arg30_*_inline_61_arg25_+_inline_61_arg31_*_inline_61_arg24_+_inline_61_arg32_*_inline_61_arg23_+_inline_61_arg33_*_inline_61_arg22_+_inline_61_arg34_*_inline_61_arg21_+_inline_61_arg35_*_inline_61_arg20_+_inline_61_arg36_*_inline_61_arg19_+_inline_61_arg37_*_inline_61_arg18_+_inline_61_arg38_*_inline_61_arg17_+_inline_61_arg39_*_inline_61_arg16_+_inline_61_arg2_*_inline_61_arg15_+_inline_61_arg40_*_inline_61_arg14_+_inline_61_arg41_*_inline_61_arg13_+_inline_61_arg42_*_inline_61_arg12_+_inline_61_arg43_*_inline_61_arg11_+_inline_61_arg44_*_inline_61_arg10_+_inline_61_arg45_*_inline_61_arg9_+_inline_61_arg46_*_inline_61_arg8_+_inline_61_arg47_*_inline_61_arg7_+_inline_61_arg48_*_inline_61_arg6_+_inline_61_arg49_*_inline_61_arg5_+_inline_61_arg50_*_inline_61_arg4_+_inline_61_arg51_*_inline_61_arg3_}","args":[{"name":"_inline_61_arg0_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_61_arg1_","lvalue":true,"rvalue":false,"count":1},{"name":"_inline_61_arg2_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg3_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg4_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg5_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg6_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg7_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg8_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg9_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg10_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg11_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg12_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg13_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg14_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg15_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg16_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg17_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg18_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg19_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg20_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg21_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg22_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg23_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg24_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg25_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg26_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg27_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg28_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg29_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg30_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg31_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg32_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg33_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg34_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg35_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg36_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg37_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg38_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg39_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg40_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg41_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg42_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg43_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg44_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg45_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg46_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg47_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg48_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg49_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg50_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_61_arg51_","lvalue":false,"rvalue":true,"count":1}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"cwise","blockSize":64});
+var doConvolve5x5 = require('cwise/lib/wrapper')({"args":["index","array","array","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar","scalar",{"offset":[-2,-2],"array":1},{"offset":[-2,-1],"array":1},{"offset":[-2,0],"array":1},{"offset":[-2,1],"array":1},{"offset":[-2,2],"array":1},{"offset":[-1,-2],"array":1},{"offset":[-1,-1],"array":1},{"offset":[-1,0],"array":1},{"offset":[-1,1],"array":1},{"offset":[-1,2],"array":1},{"offset":[0,-2],"array":1},{"offset":[0,-1],"array":1},{"offset":[0,1],"array":1},{"offset":[0,2],"array":1},{"offset":[1,-2],"array":1},{"offset":[1,-1],"array":1},{"offset":[1,0],"array":1},{"offset":[1,1],"array":1},{"offset":[1,2],"array":1},{"offset":[2,-2],"array":1},{"offset":[2,-1],"array":1},{"offset":[2,0],"array":1},{"offset":[2,1],"array":1},{"offset":[2,2],"array":1}],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{_inline_19_arg1_=_inline_19_arg0_[0]<2||_inline_19_arg0_[1]<2?0:_inline_19_arg28_*_inline_19_arg27_+_inline_19_arg29_*_inline_19_arg26_+_inline_19_arg30_*_inline_19_arg25_+_inline_19_arg31_*_inline_19_arg24_+_inline_19_arg32_*_inline_19_arg23_+_inline_19_arg33_*_inline_19_arg22_+_inline_19_arg34_*_inline_19_arg21_+_inline_19_arg35_*_inline_19_arg20_+_inline_19_arg36_*_inline_19_arg19_+_inline_19_arg37_*_inline_19_arg18_+_inline_19_arg38_*_inline_19_arg17_+_inline_19_arg39_*_inline_19_arg16_+_inline_19_arg2_*_inline_19_arg15_+_inline_19_arg40_*_inline_19_arg14_+_inline_19_arg41_*_inline_19_arg13_+_inline_19_arg42_*_inline_19_arg12_+_inline_19_arg43_*_inline_19_arg11_+_inline_19_arg44_*_inline_19_arg10_+_inline_19_arg45_*_inline_19_arg9_+_inline_19_arg46_*_inline_19_arg8_+_inline_19_arg47_*_inline_19_arg7_+_inline_19_arg48_*_inline_19_arg6_+_inline_19_arg49_*_inline_19_arg5_+_inline_19_arg50_*_inline_19_arg4_+_inline_19_arg51_*_inline_19_arg3_}","args":[{"name":"_inline_19_arg0_","lvalue":false,"rvalue":true,"count":2},{"name":"_inline_19_arg1_","lvalue":true,"rvalue":false,"count":1},{"name":"_inline_19_arg2_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg3_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg4_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg5_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg6_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg7_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg8_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg9_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg10_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg11_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg12_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg13_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg14_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg15_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg16_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg17_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg18_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg19_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg20_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg21_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg22_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg23_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg24_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg25_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg26_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg27_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg28_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg29_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg30_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg31_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg32_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg33_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg34_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg35_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg36_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg37_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg38_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg39_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg40_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg41_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg42_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg43_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg44_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg45_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg46_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg47_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg48_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg49_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg50_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_19_arg51_","lvalue":false,"rvalue":true,"count":1}],"thisVars":[],"localVars":[]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"cwise","blockSize":64});
 
 /**
 * Returns the discrete, linear convolution of the array using the given filter.
@@ -25697,7 +25389,7 @@ function initNativeArray (shape, i) {
   return result;
 }
 
-var doUnpack = require('cwise/lib/wrapper')({"args":["array","scalar","index"],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{var _inline_64_a,_inline_64_e=_inline_64_arg1_;for(_inline_64_a=0;_inline_64_a<_inline_64_arg2_.length-1;++_inline_64_a)_inline_64_e=_inline_64_e[_inline_64_arg2_[_inline_64_a]];_inline_64_e[_inline_64_arg2_[_inline_64_arg2_.length-1]]=_inline_64_arg0_}","args":[{"name":"_inline_64_arg0_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_64_arg1_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_64_arg2_","lvalue":false,"rvalue":true,"count":4}],"thisVars":[],"localVars":["_inline_64_a","_inline_64_e"]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"unpackCwise","blockSize":64});
+var doUnpack = require('cwise/lib/wrapper')({"args":["array","scalar","index"],"pre":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"body":{"body":"{var _inline_22_a,_inline_22_e=_inline_22_arg1_;for(_inline_22_a=0;_inline_22_a<_inline_22_arg2_.length-1;++_inline_22_a)_inline_22_e=_inline_22_e[_inline_22_arg2_[_inline_22_a]];_inline_22_e[_inline_22_arg2_[_inline_22_arg2_.length-1]]=_inline_22_arg0_}","args":[{"name":"_inline_22_arg0_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_22_arg1_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_22_arg2_","lvalue":false,"rvalue":true,"count":4}],"thisVars":[],"localVars":["_inline_22_a","_inline_22_e"]},"post":{"body":"{}","args":[],"thisVars":[],"localVars":[]},"debug":false,"funcName":"unpackCwise","blockSize":64});
 
 function unpackArray (arr) {
   var result = initNativeArray(arr.shape, 0);
@@ -25709,7 +25401,7 @@ function formatNumber (v) {
   return String(Number((v || 0).toFixed(CONF.nFloatingValues)));
 }
 
-},{"./config":26,"./errors":28,"./utils":46,"cwise/lib/wrapper":7,"ndarray":18,"ndarray-fft":13,"ndarray-gemm":15,"ndarray-ops":17,"typedarray-pool":21,"util":25}],46:[function(require,module,exports){
+},{"./config":25,"./errors":27,"./utils":45,"cwise/lib/wrapper":7,"ndarray":18,"ndarray-fft":13,"ndarray-gemm":15,"ndarray-ops":17,"typedarray-pool":20,"util":24}],45:[function(require,module,exports){
 'use strict';
 var DTYPES = require('./dtypes');
 var _ = require('lodash');
@@ -25802,5 +25494,5 @@ module.exports = {
   defaults: _.defaults
 };
 
-},{"./dtypes":27,"lodash":12}]},{},[44])(44)
+},{"./dtypes":26,"lodash":12}]},{},[43])(43)
 });
