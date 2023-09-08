@@ -111,6 +111,16 @@ function bitxor (a, b) {
 }
 
 /**
+ * Bitwise not argument, element-wise.
+ *
+ * @param {(NdArray|Array|number)} a
+ * @returns {NdArray}
+ */
+function bitnot (a) {
+  return NdArray.new(a).bitnot();
+}
+
+/**
  * Left shift arguments, element-wise.
  *
  * @param {(NdArray|Array|number)} a
@@ -885,7 +895,6 @@ module.exports = {
   tanh: tanh,
   clip: clip,
   exp: exp,
-  log: log,
   sqrt: sqrt,
   power: power,
   sum: sum,
@@ -899,6 +908,7 @@ module.exports = {
   bitand: bitand,
   bitor: bitor,
   bitxor: bitxor,
+  bitnot: bitnot,
   lshift: lshift,
   rshift: rshift,
   rrshift: rrshift,

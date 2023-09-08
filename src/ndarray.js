@@ -517,7 +517,7 @@ NdArray.prototype.bitor = function (x, copy) {
 };
 
 /**
- * Bitwise xor (|) `x` to the array, element-wise.
+ * Bitwise xor (^) `x` to the array, element-wise.
  *
  * @param {(NdArray|Array|number)} x
  * @param {boolean} [copy=true]
@@ -535,6 +535,22 @@ NdArray.prototype.bitxor = function (x, copy) {
   }
   x = createArray(x, this.dtype);
   ops.bxoreq(arr.selection, x.selection);
+  return arr;
+};
+
+/**
+ * Bitwise not (~) the array, element-wise.
+ *
+ * @param {boolean} [copy=true]
+ * @returns {NdArray}
+ */
+NdArray.prototype.bitnot = function (copy) {
+  if (arguments.length === 0) {
+    copy = true;
+  }
+  var arr = copy ? this.clone() : this;
+
+  ops.bnoteq(arr.selection);
   return arr;
 };
 
@@ -813,14 +829,6 @@ NdArray.prototype.toString = function () {
 * @returns {string}
 */
 NdArray.prototype.inspect = NdArray.prototype.toString;
-
-try {
-  // Stringify the array to make it readable in the console, by a human.
-  var util = require('util');  // node:util
-  NdArray.prototype[util.inspect.custom] = NdArray.prototype.toString;
-} catch (e) {
-  // pass
-}
 
 /**
 * Stringify object to JSON

@@ -28,6 +28,11 @@ describe('bitwise', function () {
     .to.eql([0xff0f, 2]);
   });
 
+  it('can do bitwise not', function () {
+    expect(v.bitnot().tolist())
+        .to.eql([~0xfff0, -2]);
+  });
+
   it('can do left shift', function () {
     expect(v.lshift(1).tolist())
     .to.eql([0x1ffe0, 2]);
