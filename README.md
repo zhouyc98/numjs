@@ -1,7 +1,8 @@
 This project is modified from https://github.com/nicolaspanel/numjs and does below modifications:
 
 - add bitwise operations for NdArray like .bitand, .bitor, .lshift
-- remove the feature of nj.images.data since it requires path which is hard to browserify
+- add type definitions in index.d.ts (modified from https://www.npmjs.com/package/@types/numjs)
+- remove nj.images.data since it requires path which is hard to browserify
 
 __NumJs__ is a npm/bower package for scientific computing with JavaScript. It contains among other things:
 

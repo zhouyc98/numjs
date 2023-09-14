@@ -1,6 +1,6 @@
 {
   "name": "@zhouyc98/numjs",
-  "version": "0.17.2",
+  "version": "0.17.3",
   "description": "Like NumPy, in JavaScript",
   "main": "src/index.js",
   "directories": {
